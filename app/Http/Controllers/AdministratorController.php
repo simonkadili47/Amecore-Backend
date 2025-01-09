@@ -107,24 +107,83 @@ class AdministratorController extends Controller
     }
 
     //payroll
-    public function addpayroll()
-    {
+    public function addpayroll(Request $request)
+{
+    $validatedData = $request->validate([
+        'full_name' => 'required|string|max:255',
+        'salary' => 'required|numeric|min:0',
+        'bonus' => 'nullable|numeric|min:0',
+        'month' => 'required|string|max:255',
+        'year' => 'required|integer|digits:4',
+        'employee_id' => 'required|exists:employees,id',
+    ]);
+
+    try {
+        $payroll = Payroll::create($validatedData);
+
+        return response()->json([
+            'message' => 'Payroll added successfully.',
+            'payroll' => $payroll,
+        ], 201);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Failed to add payroll: ' . $e->getMessage()], 500);
+    }
+}
+
+//view payroll
+public function viewpayroll()
+{
+    $payroll = Payroll::all();
+    return response()->json($payroll);
+}
+
+//update payroll
+public function updatepayroll(Request $request, $id)
+{
+    $payroll = Payroll::find($id);
+    if (!$payroll) {
+        return response()->json(['message' => 'Payroll not found.'], 404);
+    }
+
+    try {
+        // Validate the incoming request data
         $validatedData = $request->validate([
             'full_name' => 'required|string|max:255',
-            'salary' => 'required|decimal',
+            'salary' => 'required|numeric|min:0',
+            'bonus' => 'nullable|numeric|min:0',
+            'month' => 'required|string|max:255',
+            'year' => 'required|integer|digits:4',
+            'employee_id' => 'required|exists:employees,id',
         ]);
 
-        try {
-            $category = Category::create($validatedData);
+        $payroll->update($validatedData);
+        return response()->json([
+            'message' => 'Payroll updated successfully.',
+            'payroll' => $payroll,
+        ], 200);
 
-            return response()->json([
-                'message' => 'Category added successfully.',
-                'category' => $category,
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Failed to add category: ' . $e->getMessage()], 500);
-        }
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Failed to update payroll: ' . $e->getMessage()], 500);
     }
-    
-    
 }
+public function deletepayroll($id)
+    {
+        $payroll = Payroll::find($id);
+
+        if (!$payroll) {
+            return response()->json(['message' => 'Payroll not found.'], 404);
+        }
+
+        $payroll->delete();
+
+        return response()->json(['message' => 'Payroll deleted successfully.'], 200);
+    }
+
+    
+
+
+}
+
+    
+    
+
